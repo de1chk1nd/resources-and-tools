@@ -1,0 +1,4 @@
+####### Private files
+tools/s-certificate/ca.key
+tools/s-certificate/ca.cer
+tools/s-certificate/*/*
