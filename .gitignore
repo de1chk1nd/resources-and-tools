@@ -1,4 +1,55 @@
 ####### Private files
-tools/s-certificate/ca.key
-tools/s-certificate/ca.cer
-tools/s-certificate/*/*
+tools/s-certificate/ca/*
+tools/s-certificate/domains/*
+
+# Credentials - NEVER commit
+tools/s-certificate/etc/config.yaml
+tools/xc-troubleshooting/config/config.yaml
+*.p12
+*.ppk
+*.pem
+
+# Reports output
+tools/xc-troubleshooting/reports/*.md
+tools/xc-troubleshooting/reports/*.html
+tools/xc-troubleshooting/reports/*.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+!*.tfvars.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Tools
+opencode.json
