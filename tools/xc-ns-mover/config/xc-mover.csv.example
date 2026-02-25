@@ -1,0 +1,16 @@
+# =============================================================================
+# F5 XC Namespace LB Mover - Input CSV (EXAMPLE)
+# =============================================================================
+# Copy this file to xc-mover.csv and fill in the load balancers to move.
+#
+# Format:  namespace,lb_name
+#
+# - One load balancer per line.
+# - Use the output from run-scanner.sh as a starting point:
+#   copy the rows you want to move from the scanner report CSV.
+# - Lines starting with # are ignored.
+# =============================================================================
+namespace,lb_name
+old-namespace,my-app-lb
+old-namespace,api-gateway-lb
+another-ns,frontend-lb

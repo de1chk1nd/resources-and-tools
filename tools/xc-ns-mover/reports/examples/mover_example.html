@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LB Mover Report — acmecorp</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         margin: 2rem; color: #1a1a1a; background: #f8f9fa; }
+  h1 { color: #0d6efd; margin-bottom: 0.25rem; }
+  h2 { color: #333; margin-top: 2rem; }
+  .meta { color: #555; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .mode-badge { display: inline-block; background: #ffc107; color: #000; font-weight: 700;
+                 padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.85rem; margin-left: 0.5rem; }
+  .warning-banner { background: #fff3cd; border: 1px solid #ffc107; border-left: 5px solid #ffc107;
+                     border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+  .warning-banner strong { color: #856404; }
+  .warning-banner p { margin: 0.5rem 0; }
+  .warning-banner ul { margin: 0.25rem 0 0 1.25rem; padding: 0; }
+  .warning-banner li { margin-bottom: 0.25rem; }
+  .summary { display: flex; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .summary .card { background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+                    padding: 0.75rem 1.25rem; min-width: 100px; text-align: center; }
+  .summary .card .num { font-size: 1.5rem; font-weight: 700; }
+  .summary .card .label { font-size: 0.8rem; color: #666; text-transform: uppercase; }
+  .card-moved .num { color: #198754; }
+  .card-dryrun .num { color: #0d6efd; }
+  .card-failed .num { color: #dc3545; }
+  .card-reverted .num { color: #e67e22; }
+  .card-blocked .num { color: #9b59b6; }
+  .card-skipped .num { color: #6c757d; }
+  table { border-collapse: collapse; width: 100%; background: #fff;
+           border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden;
+           margin-bottom: 2rem; }
+  th { background: #0d6efd; color: #fff; padding: 0.6rem 0.75rem;
+       text-align: left; font-size: 0.85rem; text-transform: uppercase; }
+  td { padding: 0.5rem 0.75rem; border-top: 1px solid #e9ecef; font-size: 0.85rem; }
+  td a { color: #0d6efd; text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+  .backup-link { font-size: 0.75rem; color: #6c757d !important; }
+  tr:hover td { background: #f0f4ff; }
+  .status-moved { color: #198754; font-weight: 600; }
+  .status-dryrun { color: #0d6efd; font-weight: 600; }
+  .status-failed { color: #dc3545; font-weight: 600; }
+  .status-reverted { color: #e67e22; font-weight: 600; }
+  .status-blocked { color: #9b59b6; font-weight: 600; }
+  .status-skipped { color: #6c757d; font-weight: 600; }
+  .status-manual-rework { color: #e67e22; font-weight: 600; }
+  .dns-dot { font-size: 0.55rem; color: #dc3545; text-decoration: none; margin-left: 0.35rem;
+              vertical-align: middle; }
+  .dns-dot:hover { color: #a71d2a; }
+  .dns-dot-dim { color: #e67e22; }
+  .dns-dot-dim:hover { color: #c0600a; }
+  .dns-dot-ok { color: #198754; }
+  .dns-dot-ok:hover { color: #157347; }
+  .dns-table { border-collapse: collapse; width: 100%; background: #fff;
+                border: 1px solid #dee2e6; border-radius: 6px; overflow: hidden;
+                margin-bottom: 2rem; }
+  .dns-table th { background: #e67e22; font-size: 0.8rem; }
+  .dns-table td { font-size: 0.82rem; }
+  .dns-table td strong { color: #c0392b; }
+  .dns-lb-cell { font-weight: 600; vertical-align: top; border-right: 3px solid #e67e22;
+                   background: #fff8f0 !important; }
+  .dns-advice { background: #fff8f0; border: 1px solid #f5c78e; border-left: 5px solid #e67e22;
+                  border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+                  font-size: 0.88rem; line-height: 1.5; }
+  .dns-advice p { margin: 0.4rem 0; }
+  .dns-advice ol { margin: 0.25rem 0 0.5rem 1.25rem; padding: 0; }
+  .dns-advice li { margin-bottom: 0.3rem; }
+
+  /* --- DNS status banner --- */
+  .dns-status-banner {
+      display: flex; align-items: flex-start; gap: 1.25rem;
+      padding: 1.25rem 1.5rem; border-radius: 10px;
+      margin-bottom: 1.5rem; border: 1px solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .dns-status-icon {
+      flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 0 10px rgba(0,0,0,0.1);
+  }
+  .dns-status-body { flex: 1; min-width: 0; }
+  .dns-status-headline { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.3rem 0; }
+  .dns-status-detail { font-size: 0.88rem; line-height: 1.5; opacity: 0.9; }
+  .dns-action-needed {
+      background: #fce4cc; color: #7c4a03; border-color: #f5c89a;
+  }
+  .dns-action-needed .dns-status-icon {
+      background: #e67e22; color: #fff;
+  }
+  .dns-no-action {
+      background: #d4edda; color: #155724; border-color: #b7dfb9;
+  }
+  .dns-no-action .dns-status-icon {
+      background: #28a745; color: #fff;
+  }
+  .dns-auto-managed {
+      background: #d4edda; color: #155724; border-color: #b7dfb9;
+  }
+  .dns-auto-managed .dns-status-icon {
+      background: #28a745; color: #fff;
+  }
+
+  .error { color: #dc3545; font-size: 0.8rem; word-break: break-word; }
+  .rework-banner { background: #fff3cd; border: 1px solid #ffc107;
+                    border-left: 5px solid #e67e22; border-radius: 6px;
+                    padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+  .rework-banner strong { color: #856404; }
+  .rework-banner p { margin: 0.5rem 0; }
+  .rework-instructions { background: #f8f9fa; border: 1px solid #dee2e6;
+                          border-radius: 6px; padding: 1rem 1.25rem;
+                          margin-bottom: 1.5rem; font-size: 0.9rem; }
+  .rework-instructions ol { margin: 0.5rem 0 0.5rem 1.5rem; padding: 0; }
+  .rework-instructions li { margin-bottom: 0.5rem; }
+  .rework-matched { background: #d4edda; border: 1px solid #c3e6cb;
+                     border-radius: 6px; padding: 0.5rem 0.75rem;
+                     margin-bottom: 0.5rem; font-size: 0.85rem; }
+  .rework-unmatched { background: #f8d7da; border: 1px solid #f5c6cb;
+                       border-radius: 6px; padding: 0.5rem 0.75rem;
+                       margin-bottom: 0.5rem; font-size: 0.85rem; }
+  .card-rework .num { color: #e67e22; }
+
+  /* --- Rework status banner (certificate pre-flight) --- */
+  .rework-status-banner {
+      display: flex; align-items: flex-start; gap: 1.25rem;
+      padding: 1.25rem 1.5rem; border-radius: 10px;
+      margin-bottom: 1.5rem; border: 1px solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .rework-status-icon {
+      flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 0 10px rgba(0,0,0,0.1);
+  }
+  .rework-status-body { flex: 1; min-width: 0; }
+  .rework-status-headline { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.3rem 0; }
+  .rework-status-detail { font-size: 0.88rem; line-height: 1.5; opacity: 0.9; }
+  .rework-ok {
+      background: #d4edda; color: #155724; border-color: #b7dfb9;
+  }
+  .rework-ok .rework-status-icon {
+      background: #28a745; color: #fff;
+  }
+  .rework-blocked {
+      background: #fce4cc; color: #7c4a03; border-color: #f5c89a;
+  }
+  .rework-blocked .rework-status-icon {
+      background: #e67e22; color: #fff;
+  }
+
+  /* --- Health indicator (traffic-light style) --- */
+  .health-banner {
+      display: flex; align-items: flex-start; gap: 1.25rem;
+      padding: 1.25rem 1.5rem; border-radius: 10px;
+      margin-bottom: 1.75rem; border: 1px solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  }
+  .health-light {
+      flex-shrink: 0; width: 56px; height: 56px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; color: #fff;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 0 12px rgba(0,0,0,0.15);
+  }
+  .health-body { flex: 1; min-width: 0; }
+  .health-headline { font-size: 1.15rem; font-weight: 700; margin: 0 0 0.35rem 0; }
+  .health-stats { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.5rem; }
+  .health-pill {
+      display: inline-block; padding: 0.15rem 0.55rem; border-radius: 10px;
+      font-size: 0.78rem; font-weight: 600; background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(0,0,0,0.1);
+  }
+  .health-findings { margin: 0; padding: 0; list-style: none; }
+  .health-findings li {
+      font-size: 0.82rem; padding: 0.2rem 0; line-height: 1.4;
+      border-bottom: 1px dashed rgba(0,0,0,0.08);
+  }
+  .health-findings li:last-child { border-bottom: none; }
+  .health-findings .hf-icon { margin-right: 0.35rem; }
+
+  .health-green  { background: #d4edda; color: #155724; border-color: #b7dfb9; }
+  .health-green  .health-light { background: #28a745; }
+  .health-green  .health-pill  { color: #155724; }
+  .health-yellow { background: #fff3cd; color: #664d03; border-color: #ffe69c; }
+  .health-yellow .health-light { background: #ffc107; color: #664d03; }
+  .health-yellow .health-pill  { color: #664d03; }
+  .health-orange { background: #fce4cc; color: #7c4a03; border-color: #f5c89a; }
+  .health-orange .health-light { background: #e67e22; }
+  .health-orange .health-pill  { color: #7c4a03; }
+  .health-red    { background: #f8d7da; color: #721c24; border-color: #f1aeb5; }
+  .health-red    .health-light { background: #dc3545; }
+  .health-red    .health-pill  { color: #721c24; }
+  .rename-badge { display: inline-block; background: #e0f2f1; color: #00695c; font-weight: 600;
+                   padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.78rem; margin-left: 0.3rem;
+                   border: 1px solid #26a69a; }
+  details { margin-bottom: 0.75rem; }
+  summary { cursor: pointer; padding: 0.5rem 0.75rem; background: #fff;
+             border: 1px solid #dee2e6; border-radius: 6px; font-weight: 600;
+             font-size: 0.9rem; }
+  summary:hover { background: #f0f4ff; }
+  summary .meta { font-weight: 400; margin: 0; display: inline; }
+  .dep-subsection > summary { background: #e9ecef; font-size: 0.95rem;
+                               padding: 0.6rem 1rem; margin-bottom: 0; }
+  .dep-subsection { margin-bottom: 1rem; }
+  .dep-subsection-body { padding: 0.75rem 0 0 0; }
+
+  /* --- Dependency status banner --- */
+  .dep-status-banner {
+      display: flex; align-items: flex-start; gap: 1.25rem;
+      padding: 1.25rem 1.5rem; border-radius: 10px;
+      margin-bottom: 1.5rem; border: 1px solid;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+  .dep-status-icon {
+      flex-shrink: 0; width: 52px; height: 52px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 0 0 4px rgba(255,255,255,0.6), 0 0 10px rgba(0,0,0,0.1);
+  }
+  .dep-status-body { flex: 1; min-width: 0; }
+  .dep-status-headline { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.3rem 0; }
+  .dep-status-detail { font-size: 0.88rem; line-height: 1.5; opacity: 0.9; }
+  .dep-ok {
+      background: #d4edda; color: #155724; border-color: #b7dfb9;
+  }
+  .dep-ok .dep-status-icon {
+      background: #28a745; color: #fff;
+  }
+  .dep-issues {
+      background: #fce4cc; color: #7c4a03; border-color: #f5c89a;
+  }
+  .dep-issues .dep-status-icon {
+      background: #e67e22; color: #fff;
+  }
+  .dep-issue-list {
+      margin: 0.6rem 0 0 0; padding: 0; list-style: none;
+  }
+  .dep-issue-list li {
+      padding: 0.3rem 0; border-bottom: 1px solid rgba(0,0,0,0.08);
+      font-size: 0.84rem; line-height: 1.4;
+  }
+  .dep-issue-list li:last-child { border-bottom: none; }
+  .lb-issues {
+      display: flex; flex-wrap: wrap; gap: 0.3rem; margin: 0; padding: 0;
+  }
+  .lb-chip {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.15rem 0.5rem; border-radius: 4px;
+      font-size: 0.75rem; line-height: 1.3; white-space: nowrap;
+  }
+  .lb-chip-blocked { background: #fdecea; color: #943030; }
+  .lb-chip-rework { background: #fef3e2; color: #7c4a03; }
+  .lb-chip-failed { background: #fdecea; color: #943030; }
+  .lb-chip-reverted { background: #fef3e2; color: #7c4a03; }
+  .lb-chip-ok { background: #d4edda; color: #155724; }
+  .lb-chip-link { text-decoration: none; color: inherit; }
+  .lb-chip-link:hover .lb-chip { filter: brightness(0.92); cursor: pointer; }
+  tr.lb-row-blocked td { background: #fdf2f2; }
+  tr.lb-row-failed td { background: #fdf2f2; }
+  tr.lb-row-reverted td { background: #fef9ef; }
+  tr.lb-row-ok td { }
+  tbody tr { border-bottom: 1px solid #e9ecef; }
+  tbody tr:last-child { border-bottom: none; }
+
+  .json-block { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0 0 6px 6px;
+                  overflow-x: auto; font-size: 0.8rem; line-height: 1.4; margin-top: 0;
+                  border: 1px solid #dee2e6; border-top: none; white-space: pre; }
+  .json-block-wrapper { position: relative; }
+  .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; z-index: 10;
+               background: #495057; color: #fff; border: 1px solid #6c757d; border-radius: 4px;
+               padding: 0.25rem 0.6rem; font-size: 0.75rem; cursor: pointer;
+               font-family: inherit; transition: background 0.15s, border-color 0.15s; }
+  .copy-btn:hover { background: #6c757d; border-color: #adb5bd; }
+  .copy-btn.copied { background: #198754; border-color: #198754; }
+  .backup-group > summary { background: #e9ecef; font-size: 0.95rem; }
+  .backup-group-inner { padding: 0.5rem 0 0.5rem 1.25rem;
+                         border-left: 3px solid #dee2e6; margin-left: 0.5rem; }
+  .backup-inner { font-size: 0.85rem; background: #f8f9fa; }
+  .backup-dep { padding-left: 1rem; }
+  .backup-xref { font-size: 0.83rem; color: #6c757d; padding: 0.35rem 0.75rem 0.35rem 1.75rem;
+                  border-left: 2px dashed #ced4da; margin: 0.25rem 0; }
+  .backup-xref a { color: #0d6efd; text-decoration: none; }
+  .backup-xref a:hover { text-decoration: underline; }
+
+  .example-banner { background: #fff3cd; border: 1px solid #ffc107; border-left: 5px solid #ffc107;
+                     border-radius: 6px; padding: 0.75rem 1.25rem; margin-bottom: 1.5rem;
+                     font-size: 0.88rem; color: #856404; }
+
+  footer { margin-top: 2rem; font-size: 0.8rem; color: #888; }
+</style>
+</head>
+<body>
+<h1>LB Mover Report</h1>
+<div class="meta">
+  Tenant: <strong>acmecorp</strong> &nbsp;|&nbsp;
+  Target namespace: <strong>platform-services</strong> &nbsp;|&nbsp;
+  2026-02-25 15:10
+</div>
+
+<div class="example-banner">
+  <strong>Example report.</strong> This file contains fictional data to illustrate the mover HTML output.
+</div>
+
+<div class="health-banner health-green">
+  <div class="health-light">&#10004;</div>
+  <div class="health-body">
+    <div class="health-headline">Migration Successful</div>
+    <div style="font-size:0.88rem;margin-bottom:0.4rem;opacity:0.85;">
+      3 LB(s) use XC-managed DNS &mdash; records will be updated automatically.
+    </div>
+    <div class="health-stats">
+      <span class="health-pill">&#9989; 3 Moved</span>
+    </div>
+  </div>
+</div>
+
+<div class="warning-banner">
+  <strong>&#9888; Important — CNAME &amp; ACME / Let's Encrypt Warning</strong>
+  <p>When a load balancer is moved to a new namespace (or reverted back), F5 XC assigns a
+  <strong>new CNAME (host_name)</strong>. If you are using <strong>Let's Encrypt (auto-cert)</strong>,
+  the ACME challenge domain will also change.</p>
+  <ul>
+    <li>Update your DNS records to point to the <strong>new CNAME</strong> — see the
+        <a href="#dns-changes">DNS Changes</a> section below for a full list.</li>
+    <li>If the LB was <strong>reverted</strong> after a failed move, the CNAME in the source namespace
+        may differ from the original — check the value carefully.</li>
+    <li>Let's Encrypt certificates will be re-issued automatically once DNS propagates,
+        but there may be a brief period without a valid certificate.</li>
+  </ul>
+</div>
+
+<h2>Load Balancers</h2>
+<div class="summary">
+  <div class="card card-moved"><div class="num">3</div><div class="label">Moved</div></div>
+  <div class="card card-failed"><div class="num">0</div><div class="label">Failed</div></div>
+  <div class="card card-blocked"><div class="num">0</div><div class="label">Blocked</div></div>
+  <div class="card card-reverted"><div class="num">0</div><div class="label">Reverted</div></div>
+  <div class="card card-skipped"><div class="num">0</div><div class="label">Skipped</div></div>
+  <div class="card"><div class="num">3</div><div class="label">Total</div></div>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>HTTP LB Name</th>
+  <th>Namespace (old)</th>
+  <th>Namespace (new)</th>
+  <th>TLS</th>
+  <th>Status</th>
+  <th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="lb-row-ok">
+  <td>app-frontend <a href="#backup-0" class="backup-link" title="View original config">[backup]</a></td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td>Let's Encrypt <a href="#dns-lb-1" class="dns-dot dns-dot-ok" title="XC-managed DNS — records updated automatically">&#11044;</a></td>
+  <td class="status-moved">MOVED</td>
+  <td><span class="lb-chip lb-chip-ok">&#10004; OK</span></td>
+</tr>
+<tr class="lb-row-ok">
+  <td>api-gateway <a href="#backup-1" class="backup-link" title="View original config">[backup]</a></td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td>Let's Encrypt <a href="#dns-lb-2" class="dns-dot dns-dot-ok" title="XC-managed DNS — records updated automatically">&#11044;</a></td>
+  <td class="status-moved">MOVED</td>
+  <td><span class="lb-chip lb-chip-ok">&#10004; OK</span></td>
+</tr>
+<tr class="lb-row-ok">
+  <td>checkout-service <a href="#backup-2" class="backup-link" title="View original config">[backup]</a></td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td>Let's Encrypt <a href="#dns-lb-3" class="dns-dot dns-dot-ok" title="XC-managed DNS — records updated automatically">&#11044;</a></td>
+  <td class="status-moved">MOVED</td>
+  <td><span class="lb-chip lb-chip-ok">&#10004; OK</span></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="dns-changes">DNS Update Check</h2>
+<div class="dns-status-banner dns-auto-managed">
+<div class="dns-status-icon">&#127760;</div>
+<div class="dns-status-body">
+<div class="dns-status-headline">DNS Auto-Managed</div>
+<div class="dns-status-detail">All 3 LB(s) use XC-managed DNS zones.
+Records will be created automatically &mdash; verify in the F5 XC Console after migration.</div>
+</div></div>
+<details class="dep-subsection">
+<summary>Managed Records (informational)</summary>
+<div class="dep-subsection-body">
+<table class="dns-table">
+<thead><tr>
+<th>HTTP LB</th>
+<th>DNS Record</th>
+<th>Type</th>
+<th>Old Value</th>
+<th>New Value</th>
+<th>Action</th>
+</tr></thead>
+<tbody>
+<tr>
+<td id="dns-lb-1" rowspan="2" class="dns-lb-cell">app-frontend</td>
+<td><code>app.acmecorp.example.com</code></td>
+<td>A / CNAME</td>
+<td>ves-io-1a2bd207.ac.vh.ves.io</td>
+<td><strong>ves-io-9f8ec41a.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+<tr>
+<td><code>_acme-challenge.app.acmecorp.example.com</code></td>
+<td>CNAME</td>
+<td>ves-io-3c4e8580.ac.vh.ves.io</td>
+<td><strong>ves-io-7d6f2b93.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+<tr>
+<td id="dns-lb-2" rowspan="2" class="dns-lb-cell">api-gateway</td>
+<td><code>api.acmecorp.example.com</code></td>
+<td>A / CNAME</td>
+<td>ves-io-5e6fa30b.ac.vh.ves.io</td>
+<td><strong>ves-io-2c3de75f.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+<tr>
+<td><code>_acme-challenge.api.acmecorp.example.com</code></td>
+<td>CNAME</td>
+<td>ves-io-8b9c1742.ac.vh.ves.io</td>
+<td><strong>ves-io-4e5f6a08.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+<tr>
+<td id="dns-lb-3" rowspan="2" class="dns-lb-cell">checkout-service</td>
+<td><code>checkout.acmecorp.example.com</code></td>
+<td>A / CNAME</td>
+<td>ves-io-7b8cd90e.ac.vh.ves.io</td>
+<td><strong>ves-io-4a5b6c7d.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+<tr>
+<td><code>_acme-challenge.checkout.acmecorp.example.com</code></td>
+<td>CNAME</td>
+<td>ves-io-0e1f5523.ac.vh.ves.io</td>
+<td><strong>ves-io-3a2b8891.ac.vh.ves.io</strong></td>
+<td class="status-moved">AUTO-MANAGED</td>
+</tr>
+</tbody></table>
+</div></details>
+
+<h2 id="dep-check">Dependency Check</h2>
+<div class="dep-status-banner dep-ok">
+<div class="dep-status-icon">&#128279;</div>
+<div class="dep-status-body">
+<div class="dep-status-headline">All Dependencies Resolved</div>
+<div class="dep-status-detail">4 dependent object(s) were moved alongside the load balancers.
+No issues detected.</div>
+</div></div>
+<details class="dep-subsection">
+<summary>Dependent Objects</summary>
+<div class="dep-subsection-body">
+<p class="meta">Objects moved alongside the load balancers (origin pools, health checks, TLS certificates, etc.).
+<strong>Objects in the <code>system</code> and <code>shared</code> namespaces are
+<span style="color:#dc3545;text-decoration:underline">never</span> moved.</strong></p>
+<div class="summary">
+  <div class="card card-moved"><div class="num">4</div><div class="label">Moved</div></div>
+  <div class="card card-failed"><div class="num">0</div><div class="label">Failed</div></div>
+  <div class="card card-blocked"><div class="num">0</div><div class="label">Blocked</div></div>
+  <div class="card card-reverted"><div class="num">0</div><div class="label">Reverted</div></div>
+  <div class="card"><div class="num">4</div><div class="label">Total</div></div>
+</div>
+<table>
+<thead>
+<tr>
+  <th>Parent LB</th>
+  <th>Object Type</th>
+  <th>Object Name</th>
+  <th>Namespace (old)</th>
+  <th>Namespace (new)</th>
+  <th>Status</th>
+  <th>Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>app-frontend</td>
+  <td>Origin Pool</td>
+  <td>app-frontend-pool</td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td class="status-moved">MOVED</td>
+  <td></td>
+</tr>
+<tr>
+  <td>app-frontend</td>
+  <td>Health Check</td>
+  <td>default-hc</td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td class="status-moved">MOVED</td>
+  <td></td>
+</tr>
+<tr>
+  <td>api-gateway</td>
+  <td>Origin Pool</td>
+  <td>api-gateway-pool</td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td class="status-moved">MOVED</td>
+  <td></td>
+</tr>
+<tr>
+  <td>checkout-service</td>
+  <td>Origin Pool</td>
+  <td>checkout-pool</td>
+  <td>production</td>
+  <td>platform-services</td>
+  <td class="status-moved">MOVED</td>
+  <td></td>
+</tr>
+</tbody>
+</table>
+</div></details>
+<details class="dep-subsection">
+<summary>Dependency Graph</summary>
+<div class="dep-subsection-body">
+<p class="meta">Visual dependency tree per batch.
+Simple chains show the linear dependency flow for independent LBs.
+<span style="color:#dc3545;font-weight:600">Red</span> borders indicate
+objects referenced by external objects not in the move list (cannot be moved).
+<span style="color:#e67e22;font-weight:600">Orange</span> borders indicate
+shared dependencies (used by multiple LBs in the same batch).
+Click to expand individual batches.</p>
+
+<details>
+<summary>Batch 1 (atomic): app-frontend, api-gateway, checkout-service</summary>
+<div style="overflow-x:auto; padding: 0.5rem 0;">
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="290"
+     style="font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #fff; border: 1px solid #dee2e6; border-radius: 6px;
+            margin-bottom: 1rem;">
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6" fill="#90a4ae" />
+    </marker>
+    <marker id="arr-shared" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6" fill="#e67e22" />
+    </marker>
+  </defs>
+  <!-- Row 0: HTTP LBs (blue) -->
+  <rect x="20" y="20" width="180" height="36" rx="6" fill="#0d6efd" />
+  <text x="110" y="42" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">app-frontend</text>
+  <rect x="248" y="20" width="180" height="36" rx="6" fill="#0d6efd" />
+  <text x="338" y="42" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">api-gateway</text>
+  <rect x="476" y="20" width="180" height="36" rx="6" fill="#0d6efd" />
+  <text x="566" y="42" text-anchor="middle" fill="#fff" font-size="12" font-weight="600">checkout-service</text>
+
+  <!-- Arrows: LBs -> Origin Pools -->
+  <line x1="110" y1="56" x2="110" y2="116" stroke="#90a4ae" stroke-width="1.5" marker-end="url(#arr)" />
+  <line x1="338" y1="56" x2="338" y2="116" stroke="#90a4ae" stroke-width="1.5" marker-end="url(#arr)" />
+  <line x1="566" y1="56" x2="566" y2="116" stroke="#90a4ae" stroke-width="1.5" marker-end="url(#arr)" />
+
+  <!-- Row 1: Origin Pools (teal) -->
+  <rect x="20" y="116" width="180" height="36" rx="6" fill="#e0f2f1" stroke="#26a69a" stroke-width="1.5" />
+  <text x="110" y="138" text-anchor="middle" fill="#1a1a1a" font-size="11">OP: app-frontend-pool</text>
+  <rect x="248" y="116" width="180" height="36" rx="6" fill="#e0f2f1" stroke="#26a69a" stroke-width="1.5" />
+  <text x="338" y="138" text-anchor="middle" fill="#1a1a1a" font-size="11">OP: api-gateway-pool</text>
+  <rect x="476" y="116" width="180" height="36" rx="6" fill="#e0f2f1" stroke="#26a69a" stroke-width="1.5" />
+  <text x="566" y="138" text-anchor="middle" fill="#1a1a1a" font-size="11">OP: checkout-pool</text>
+
+  <!-- Arrows: Origin Pools -> shared Health Check (orange for shared) -->
+  <line x1="110" y1="152" x2="338" y2="212" stroke="#e67e22" stroke-width="2.5" marker-end="url(#arr-shared)" />
+  <line x1="338" y1="152" x2="338" y2="212" stroke="#e67e22" stroke-width="2.5" marker-end="url(#arr-shared)" />
+  <line x1="566" y1="152" x2="338" y2="212" stroke="#e67e22" stroke-width="2.5" marker-end="url(#arr-shared)" />
+
+  <!-- Row 2: Shared Health Check (orange border = shared) -->
+  <rect x="248" y="212" width="180" height="36" rx="6" fill="#fef3e8" stroke="#e67e22" stroke-width="2.5" />
+  <text x="338" y="234" text-anchor="middle" fill="#1a1a1a" font-size="11">HC: default-hc</text>
+
+  <!-- Legend -->
+  <g transform="translate(476, 260)">
+    <rect x="0" y="0" width="14" height="14" rx="3" fill="#fef3e8" stroke="#e67e22" stroke-width="2" />
+    <text x="20" y="11" font-size="10" fill="#666">shared dependency (used by multiple LBs in this batch)</text>
+  </g>
+</svg>
+</div>
+</details>
+
+</div>
+</details>
+
+<h2>Original Configuration Backups</h2>
+<p class="meta">Full GET responses captured <strong>before</strong> any changes were made.
+Grouped by HTTP LB with dependencies nested below.
+Shared dependencies appear once with cross-references from other LBs.
+Click to expand.</p>
+
+<details id="backup-0" class="backup-group">
+<summary>app-frontend + 2 dep(s) <span class="meta">(production)</span></summary>
+<div class="backup-group-inner">
+  <details>
+    <summary class="backup-inner">HTTP LB Config</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "app-frontend",
+    "namespace": "production"
+  },
+  "spec": {
+    "domains": ["app.acmecorp.example.com"],
+    "http": {
+      "port": 80
+    },
+    "https_auto_cert": {
+      "http_redirect": true,
+      "add_hsts": true
+    },
+    "default_route_pools": [
+      {
+        "pool": {
+          "name": "app-frontend-pool",
+          "namespace": "production"
+        },
+        "weight": 1
+      }
+    ],
+    "app_firewall": {
+      "name": "standard-waf-policy",
+      "namespace": "shared"
+    },
+    "auto_cert_info": {
+      "auto_cert_state": "AutoCertIssued",
+      "dns_records": [
+        { "type": "CNAME", "name": "_acme-challenge.app.acmecorp.example.com", "value": "ves-io-3c4e8580.ac.vh.ves.io" }
+      ]
+    },
+    "dns_info": [
+      { "dns_name": "ves-io-1a2bd207.ac.vh.ves.io" }
+    ]
+  }
+}</pre>
+    </div>
+  </details>
+  <details>
+    <summary class="backup-inner backup-dep">Origin Pool: app-frontend-pool</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "app-frontend-pool",
+    "namespace": "production"
+  },
+  "spec": {
+    "origin_servers": [
+      {
+        "public_name": {
+          "dns_name": "origin-app.acmecorp.internal"
+        }
+      }
+    ],
+    "port": 443,
+    "use_tls": {
+      "use_host_header_as_sni": {}
+    },
+    "healthcheck": [
+      {
+        "name": "default-hc",
+        "namespace": "production"
+      }
+    ]
+  }
+}</pre>
+    </div>
+  </details>
+  <details>
+    <summary class="backup-inner backup-dep">Health Check: default-hc</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "default-hc",
+    "namespace": "production"
+  },
+  "spec": {
+    "http_health_check": {
+      "use_origin_server_name": {},
+      "path": "/healthz",
+      "expected_status_codes": ["200"]
+    },
+    "timeout": 3,
+    "interval": 15,
+    "unhealthy_threshold": 3,
+    "healthy_threshold": 2
+  }
+}</pre>
+    </div>
+  </details>
+</div>
+</details>
+
+<details id="backup-1" class="backup-group">
+<summary>api-gateway + 1 dep(s) <span class="meta">(production)</span></summary>
+<div class="backup-group-inner">
+  <details>
+    <summary class="backup-inner">HTTP LB Config</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "api-gateway",
+    "namespace": "production"
+  },
+  "spec": {
+    "domains": ["api.acmecorp.example.com"],
+    "https_auto_cert": {
+      "http_redirect": true,
+      "add_hsts": true
+    },
+    "default_route_pools": [
+      {
+        "pool": {
+          "name": "api-gateway-pool",
+          "namespace": "production"
+        },
+        "weight": 1
+      }
+    ],
+    "app_firewall": {
+      "name": "standard-waf-policy",
+      "namespace": "shared"
+    }
+  }
+}</pre>
+    </div>
+  </details>
+  <details>
+    <summary class="backup-inner backup-dep">Origin Pool: api-gateway-pool</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "api-gateway-pool",
+    "namespace": "production"
+  },
+  "spec": {
+    "origin_servers": [
+      {
+        "public_name": {
+          "dns_name": "origin-api.acmecorp.internal"
+        }
+      }
+    ],
+    "port": 443,
+    "use_tls": {
+      "use_host_header_as_sni": {}
+    },
+    "healthcheck": [
+      {
+        "name": "default-hc",
+        "namespace": "production"
+      }
+    ]
+  }
+}</pre>
+    </div>
+  </details>
+  <div class="backup-xref">Health Check: default-hc (shared — see <a href="#backup-0">app-frontend</a>)</div>
+</div>
+</details>
+
+<details id="backup-2" class="backup-group">
+<summary>checkout-service + 1 dep(s) <span class="meta">(production)</span></summary>
+<div class="backup-group-inner">
+  <details>
+    <summary class="backup-inner">HTTP LB Config</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "checkout-service",
+    "namespace": "production"
+  },
+  "spec": {
+    "domains": ["checkout.acmecorp.example.com"],
+    "https_auto_cert": {
+      "http_redirect": true,
+      "add_hsts": true
+    },
+    "default_route_pools": [
+      {
+        "pool": {
+          "name": "checkout-pool",
+          "namespace": "production"
+        },
+        "weight": 1
+      }
+    ]
+  }
+}</pre>
+    </div>
+  </details>
+  <details>
+    <summary class="backup-inner backup-dep">Origin Pool: checkout-pool</summary>
+    <div class="json-block-wrapper">
+      <button class="copy-btn" onclick="copyJson(this)">Copy JSON</button>
+<pre class="json-block">{
+  "metadata": {
+    "name": "checkout-pool",
+    "namespace": "production"
+  },
+  "spec": {
+    "origin_servers": [
+      {
+        "public_name": {
+          "dns_name": "origin-checkout.acmecorp.internal"
+        }
+      }
+    ],
+    "port": 443,
+    "use_tls": {
+      "use_host_header_as_sni": {}
+    },
+    "healthcheck": [
+      {
+        "name": "default-hc",
+        "namespace": "production"
+      }
+    ]
+  }
+}</pre>
+    </div>
+  </details>
+  <div class="backup-xref">Health Check: default-hc (shared — see <a href="#backup-0">app-frontend</a>)</div>
+</div>
+</details>
+
+<footer>Generated by xc-ns-mover &mdash; example report with fictional data</footer>
+<script>
+function copyJson(btn) {
+  var pre = btn.parentElement.querySelector('pre.json-block');
+  if (!pre) return;
+  var text = pre.textContent || pre.innerText;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.textContent = 'Copy JSON';
+      btn.classList.remove('copied');
+    }, 2000);
+  }, function() {
+    /* Fallback for older browsers / non-HTTPS */
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(function() {
+        btn.textContent = 'Copy JSON';
+        btn.classList.remove('copied');
+      }, 2000);
+    } catch(e) {
+      btn.textContent = 'Failed';
+      setTimeout(function() { btn.textContent = 'Copy JSON'; }, 2000);
+    }
+    document.body.removeChild(ta);
+  });
+}
+</script>
+</body>
+</html>

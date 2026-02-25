@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Runtime output — reports and logs
+# Each run creates a timestamped subdirectory; ignore all of them
+# except the checked-in examples.
+reports/*/
+!reports/examples/
+logs/*.log
+
+# Config with real credentials
+config/config.yaml
+config/xc-mover.csv
+
+# Dry-run fingerprint
+config/.mover_dryrun_fingerprint

@@ -8,6 +8,7 @@ A collection of utilities and helper scripts for day-to-day infrastructure and s
 |------|-------------|
 | [jwt-decode](tools/jwt-decode/) | Interactive CLI tool to decode and inspect JWT tokens |
 | [s-certificate](tools/s-certificate/) | Generate server certificates signed by your own CA |
+| [xc-ns-mover](tools/xc-ns-mover/) | Move HTTP load balancers between F5 XC namespaces |
 | [xc-troubleshooting](tools/xc-troubleshooting/) | Query F5 XC security event logs and generate troubleshooting reports |
 
 ### jwt-decode
@@ -33,6 +34,21 @@ python generate_s-cert.py mydomain.org
 
 See [tools/s-certificate/README.md](tools/s-certificate/README.md) for details.
 
+### xc-ns-mover
+
+Moves HTTP load balancers (and their dependencies) between F5 Distributed Cloud namespaces. Includes a **scanner** to discover all LBs across namespaces and a **mover** that handles dependency resolution, conflict detection, certificate pre-flight checks, rollback on failure, and detailed HTML reporting.
+
+```bash
+cd tools/xc-ns-mover
+pip install -r requirements.txt
+cp config/config.yaml.example config/config.yaml
+./bin/run-scanner.sh            # list all LBs -> CSV + HTML report
+./bin/run-mover.sh --dry-run    # pre-migration report (no changes)
+./bin/run-mover.sh              # execute migration
+```
+
+See [tools/xc-ns-mover/README.md](tools/xc-ns-mover/README.md) for full documentation.
+
 ### xc-troubleshooting
 
 CLI tool that queries F5 Distributed Cloud security event logs by request ID, source IP, FQDN, or any combination, and generates local troubleshooting reports in Markdown, HTML, or JSON.
@@ -53,6 +69,7 @@ resources-and-tools/
 ├── tools/
 │   ├── jwt-decode/          # JWT token decoder
 │   ├── s-certificate/       # Self-signed certificate generator
+│   ├── xc-ns-mover/         # F5 XC namespace LB mover
 │   └── xc-troubleshooting/  # F5 XC WAAP troubleshooting tool
 ├── .gitignore
 ├── LICENSE

@@ -5,6 +5,9 @@ tools/s-certificate/domains/*
 # Credentials - NEVER commit
 tools/s-certificate/etc/config.yaml
 tools/xc-troubleshooting/config/config.yaml
+tools/xc-ns-mover/config/config.yaml
+tools/xc-ns-mover/config/xc-mover.csv
+tools/xc-ns-mover/config/.mover_dryrun_fingerprint
 *.p12
 *.ppk
 *.pem
@@ -13,6 +16,11 @@ tools/xc-troubleshooting/config/config.yaml
 tools/xc-troubleshooting/reports/*.md
 tools/xc-troubleshooting/reports/*.html
 tools/xc-troubleshooting/reports/*.json
+tools/xc-ns-mover/reports/*.csv
+tools/xc-ns-mover/reports/*.html
+
+# Logs output
+tools/xc-ns-mover/logs/*.log
 
 # Python
 __pycache__/
@@ -52,4 +60,4 @@ Thumbs.db
 !.env.example
 
 # Tools
-opencode.json
+/*.json

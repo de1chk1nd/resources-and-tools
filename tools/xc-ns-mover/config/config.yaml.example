@@ -1,0 +1,63 @@
+# =============================================================================
+# F5 XC Namespace LB Mover - Configuration (EXAMPLE)
+# =============================================================================
+# Copy this file to config.yaml and fill in your values.
+# DO NOT commit config.yaml with real credentials to version control.
+# =============================================================================
+
+# F5 Distributed Cloud tenant settings
+tenant:
+  # Your tenant name (the part before .console.ves.volterra.io)
+  # Example: "acmecorp"
+  name: "acmecorp"
+
+# Authentication
+auth:
+  # API Token generated from F5 XC Console
+  # Navigate to: Administration -> Credentials -> API Credentials
+  # Type: API Token
+  api_token: "REPLACE_WITH_YOUR_API_TOKEN"
+
+# Namespace filter settings
+# You can use include, exclude, or BOTH:
+#
+#   include only  — scan only the listed namespaces
+#   exclude only  — scan all namespaces except the listed ones
+#   both          — start with the include list, then remove the exclude entries
+#                   (useful for: "scan the dev-* namespaces but skip dev-legacy")
+#   neither       — scan ALL namespaces
+namespaces:
+  # List of namespaces to include (only these will be scanned).
+  # Leave empty or omit to start from all namespaces.
+  include:
+    # - "production"
+    # - "staging"
+
+  # List of namespaces to exclude (these will be skipped).
+  # Applied after include — so you can include a broad set and then carve out exceptions.
+  exclude:
+    # - "system"
+    # - "shared"
+
+# Report output settings
+report:
+  # Output directory for the CSV report
+  output_dir: "reports"
+
+# Mover settings (used by run-mover.sh)
+# Input CSV: config/xc-mover.csv (copy from xc-mover.csv.example)
+mover:
+  # Target namespace — all LBs from config/xc-mover.csv will be re-created here.
+  target_namespace: "new-namespace"
+
+  # Conflict prefix — used when an object with the same name already exists
+  # in the target namespace. When a conflict is detected the user is prompted
+  # to either skip the object or rename it by prepending this prefix.
+  # The prefix is added as: "<prefix>-<original-name>"
+  # In batch / non-interactive mode use --conflict-action (skip|prefix) to
+  # choose automatically without prompts.
+  #
+  # Examples:
+  #   conflict_prefix: "migrated"       ->  "migrated-my-app-lb"
+  #   conflict_prefix: "from-old-ns"    ->  "from-old-ns-my-app-lb"
+  conflict_prefix: "migrated"
