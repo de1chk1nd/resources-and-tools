@@ -6,19 +6,20 @@ A collection of utilities and helper scripts for day-to-day infrastructure and s
 
 | Tool | Description |
 |------|-------------|
-| [jwt-decode](tools/jwt-decode/) | Interactive CLI tool to decode and inspect JWT tokens |
+| [jwt-decode](tools/jwt-decode/) | Decode and inspect JWT tokens (interactive, argument, or stdin) |
 | [s-certificate](tools/s-certificate/) | Generate server certificates signed by your own CA |
 | [xc-ns-mover](tools/xc-ns-mover/) | Move HTTP load balancers between F5 XC namespaces |
 | [xc-troubleshooting](tools/xc-troubleshooting/) | Query F5 XC security event logs and generate troubleshooting reports |
 
 ### jwt-decode
 
-Simple Python script that decodes a JWT token (without signature verification) and pretty-prints the header, payload, and signature. Useful for quickly inspecting tokens during debugging.
+Decode and inspect JWT (JSON Web Token) tokens without signature verification. Pretty-prints header, payload, and signature. Supports interactive prompt, CLI argument, and stdin piping. No external dependencies.
 
 ```bash
 cd tools/jwt-decode
-pip install PyJWT
-python jwt-decode.py
+./bin/run-jwt-decode.sh                           # interactive prompt
+./bin/run-jwt-decode.sh "<token>"                  # pass token as argument
+echo "<token>" | ./bin/run-jwt-decode.sh --stdin   # pipe via stdin
 ```
 
 See [tools/jwt-decode/README.md](tools/jwt-decode/README.md) for details.
@@ -59,7 +60,7 @@ CLI tool that queries F5 Distributed Cloud security event logs by request ID, so
 cd tools/xc-troubleshooting
 pip install -r requirements.txt
 cp config/config.yaml.example config/config.yaml
-python src/xc_troubleshoot.py --req-id "abc123"
+./bin/run-troubleshoot.sh --req-id "abc123"
 ```
 
 See [tools/xc-troubleshooting/README.md](tools/xc-troubleshooting/README.md) for full documentation.
@@ -70,9 +71,24 @@ See [tools/xc-troubleshooting/README.md](tools/xc-troubleshooting/README.md) for
 resources-and-tools/
 ├── tools/
 │   ├── jwt-decode/          # JWT token decoder
+│   │   ├── bin/             #   Shell wrapper
+│   │   ├── docs/            #   Reference guide
+│   │   └── src/jwt_decode/  #   Python package
 │   ├── s-certificate/       # Self-signed certificate generator
+│   │   ├── bin/             #   Shell wrapper
+│   │   ├── config/          #   YAML config + examples
+│   │   ├── docs/            #   Reference guide
+│   │   └── src/s_certificate/
 │   ├── xc-ns-mover/         # F5 XC namespace LB mover
+│   │   ├── bin/             #   Shell wrappers (scanner + mover)
+│   │   ├── config/          #   YAML config + CSV input
+│   │   ├── docs/            #   Reference guide
+│   │   └── src/xc_ns_mover/
 │   └── xc-troubleshooting/  # F5 XC WAAP troubleshooting tool
+│       ├── bin/             #   Shell wrapper
+│       ├── config/          #   YAML config
+│       ├── docs/            #   Reference guide
+│       └── src/xc_troubleshoot/
 ├── .gitignore
 ├── LICENSE
 └── README.md
