@@ -44,6 +44,13 @@ class SecurityEvent(TypedDict, total=False):
     policy_result: str
     oas_validation_action: str
     rule_hits: Any
+    signatures: Any
+    threat_campaigns: Any
+    attack_types: Any
+    violation_rating: str
+    req_risk: str
+    req_risk_reasons: Any
+    app_firewall_name: str
     bot_classification: str
     country: str
     city: str
@@ -154,6 +161,13 @@ SECURITY_EVENT_FIELDS: list[FieldDef] = [
     FieldDef("policy_result",         "Policy Result",       None, is_policy=True),
     FieldDef("oas_validation_action", "OAS Validation",      None, is_policy=True),
     FieldDef("rule_hits",             "WAF Rule Hits",       "waf_rule_hits",     "violations", default=[]),
+    FieldDef("signatures",            "WAF Signatures",      "signatures",        default=[]),
+    FieldDef("threat_campaigns",      "Threat Campaigns",    "threat_campaigns",  default=[]),
+    FieldDef("attack_types",          "Attack Types",        "attack_types",      default=[]),
+    FieldDef("violation_rating",      "Violation Rating",    "violation_rating"),
+    FieldDef("req_risk",              "Request Risk",        "req_risk"),
+    FieldDef("req_risk_reasons",      "Risk Reasons",        "req_risk_reasons",  default=[]),
+    FieldDef("app_firewall_name",     "App Firewall",        "app_firewall_name"),
     FieldDef("bot_classification",    "Bot Classification",  "bot_classification"),
     FieldDef("country",               "Country",             "country"),
     FieldDef("city",                  "City",                "city"),

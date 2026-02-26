@@ -1,6 +1,6 @@
 """F5 XC WAAP Troubleshooting Tool."""
 
-__version__ = "1.1.0"
+__version__ = "2.0.0"
 
 __all__ = [
     "analysis",
@@ -9,7 +9,10 @@ __all__ = [
     "config",
     "hints",
     "models",
+    "orchestrator",
     "parsers",
     "reports",
     "research",
+    "traffic_flow",
+    "validation",
 ]
