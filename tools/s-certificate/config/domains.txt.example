@@ -1,0 +1,16 @@
+# =============================================================================
+# S-Certificate Tool - Domain List (EXAMPLE)
+# =============================================================================
+# Copy this file to domains.txt and fill in your domains.
+#
+# One domain per line. Each domain gets its own certificate with a wildcard
+# SAN (*.domain). Blank lines and lines starting with # are ignored.
+#
+# Usage:
+#   ./bin/run-s-certificate.sh --domains config/domains.txt
+#   ./bin/run-s-certificate.sh --domains config/domains.txt --xc-upload --no-p12
+# =============================================================================
+
+app.example.com
+api.example.com
+portal.example.com

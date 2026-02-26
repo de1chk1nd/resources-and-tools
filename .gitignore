@@ -3,7 +3,8 @@ tools/s-certificate/ca/*
 tools/s-certificate/domains/*
 
 # Credentials - NEVER commit
-tools/s-certificate/etc/config.yaml
+tools/s-certificate/config/config.yaml
+tools/s-certificate/config/domains.txt
 tools/xc-troubleshooting/config/config.yaml
 tools/xc-ns-mover/config/config.yaml
 tools/xc-ns-mover/config/xc-mover.csv

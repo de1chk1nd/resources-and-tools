@@ -25,14 +25,16 @@ See [tools/jwt-decode/README.md](tools/jwt-decode/README.md) for details.
 
 ### s-certificate
 
-Generates server certificates signed by your own Certificate Authority. Provide a domain name and it produces a `.p12` bundle — handy for lab environments and demo setups.
+Generates server certificates signed by your own Certificate Authority, with optional upload to F5 Distributed Cloud (XC). Provide a domain name and it produces a `.p12` bundle — handy for lab environments and demo setups.
 
 ```bash
 cd tools/s-certificate
-python generate_s-cert.py mydomain.org
+pip install -r requirements.txt
+cp config/config.yaml.example config/config.yaml
+./bin/run-s-certificate.sh mydomain.org
 ```
 
-See [tools/s-certificate/README.md](tools/s-certificate/README.md) for details.
+See [tools/s-certificate/README.md](tools/s-certificate/README.md) for full documentation.
 
 ### xc-ns-mover
 
